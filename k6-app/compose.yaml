@@ -1,0 +1,87 @@
+services:
+  mariadb:
+    image: mariadb:10.6
+    container_name: orangehrm_db
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M    
+    environment:
+      MYSQL_ROOT_PASSWORD: orangehrm
+      MYSQL_DATABASE: orangehrm_db
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  # Acces Admin pwd Orangehrm$2026
+  orangehrm:
+    image: orangehrm/orangehrm:5.8
+    container_name: orangehrm_app
+    restart: unless-stopped
+    ports:
+      - "8200:80"
+      - "8243:443"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 150M    
+    environment:
+      ORANGEHRM_DATABASE_HOST: mariadb
+      ORANGEHRM_DATABASE_USER: root
+      ORANGEHRM_DATABASE_PASSWORD: orangehrm
+      ORANGEHRM_DATABASE_NAME: orangehrm_db
+    depends_on:
+      mariadb:
+        condition: service_healthy
+  # --- Ajout de la stack Monitoring ---
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=orange_metrics
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=InfluxDB$2026
+      - INFLUXDB_HTTP_AUTH_ENABLED=false # Desactive pour simplifier les tests k6 au debut
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=Admin$2026
+    depends_on:
+      - influxdb
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  # --- AJOUT DE TELEGRAF POUR LE MONITORING ---
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    user: "0:0"
+    privileged: true
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+      - mariadb
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Permet de monitorer l'usage CPU/RAM des conteneurs
+
+volumes:
+  mariadb_data:
+  influxdb_data:
+  grafana_data:

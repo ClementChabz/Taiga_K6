@@ -1,0 +1,87 @@
+EC2
+Grafana : 13.38.228.243
+Orangehrm : 35.181.48.222
+
+http://35.181.48.222:8200
+Admin
+Orangehrm$2026
+
+http://13.38.228.243:3000
+Admin
+Admin$2026
+
+Config InfluxDb data source
+http://influxdb:8086
+Database : orange_metrics
+
+
+# Mise à jour du système
+sudo dnf update -y     # (ou sudo yum update -y si dnf n'existe pas)
+
+# Installation de Docker
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+
+# Autoriser l'utilisateur ec2-user à lancer docker sans 'sudo'
+sudo usermod -aG docker ec2-user
+
+sudo dnf install -y docker-compose-plugin
+ou
+# 1. Créez le dossier système pour les plugins Docker
+sudo mkdir -p /usr/libexec/docker/cli-plugins
+
+# 2. Téléchargez la toute dernière version stable de Docker Compose
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/libexec/docker/cli-plugins/docker-compose
+
+# 3. Donnez les droits d'exécution au fichier téléchargé
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+
+docker compose version
+
+sudo docker compose up -d
+
+Supprimer tout
+docker compose down -v --rmi all
+
+ou
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker system prune -a --volumes -f
+
+Verification
+docker ps -a
+docker images
+docker volume ls
+
+Swap instance OrangeHRM
+# Crée un fichier de 2 Go pour le swap
+sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Pour que le swap survive au redémarrage
+echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+
+Instance 1 : Check telegraf
+docker logs telegraf
+docker compose restart telegraf
+sudo chmod 666 /var/run/docker.sock
+curl -v http://13.38.228.243:8086/ping
+
+Sur l'instance 2: check influxdb
+docker logs influxdb
+
+
+1. Les Dashboards adaptés à InfluxDB (v1.8)
+Pour visualiser vos conteneurs Docker et votre instance EC2 avec les données envoyées par Telegraf dans InfluxDB, utilisez plutôt ces IDs :
+
+ID 10585 (Docker Dashboard via Telegraf) : C'est le plus complet pour voir le CPU, la RAM et le réseau de chaque conteneur (OrangeHRM, MariaDB, etc.).
+Varaiable DS_INFLUXDB=influxdb
+ID 1150 (Telegraf: System Dashboard) : Très efficace pour surveiller l'état global de votre machine hôte (CPU total, Load Average, Disk I/O).
+Varaiable DS_INFLUX=influxdb
+
+. Les meilleurs Dashboards Grafana pour k6 + InfluxDB
+ID 2587 (k6 Load Test Results) : C'est le dashboard "officiel" et le plus utilisé pour k6 avec InfluxDB. Il est simple, efficace et affiche les RPS (Requêtes par seconde), les erreurs et les percentiles de latence (P90, P95, P99).
+ID 10660 (k6 Cloud Style) : Si vous préférez une interface plus moderne qui ressemble à l'interface k6 Cloud, celui-ci est excellent. Il nécessite que k6 envoie ses données dans une base InfluxDB nommée k6 (ou de changer la variable dans le dashboard).

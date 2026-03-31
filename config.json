@@ -1,0 +1,9 @@
+{
+  "local": {
+    "baseUrl": "http://localhost:9000",
+    "host": "localhost:9000",
+    "username": "taiga",
+    "password": "taiga",
+    "vus": 1
+  }
+}
