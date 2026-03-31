@@ -4,6 +4,7 @@
     "host": "localhost:9000",
     "username": "taiga",
     "password": "taiga",
-    "vus": 1
+    "vus": 1,
+    "projectSlug":"k6-training"
   }
 }

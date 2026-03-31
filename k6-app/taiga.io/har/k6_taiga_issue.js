@@ -1,8 +1,8 @@
 import { sleep, group } from 'k6'
 import http from 'k6/http'
 
-const HOST = `localhost:9100`;
-const BASE_URL = 'http://localhost:9100';
+const HOST = `localhost:9000`;
+const BASE_URL = 'http://localhost:9000';
 
 // random sleep between 500ms and 2000ms (0.5s to 2s):
 const getThinkTime = () => Math.random() * (2 - 0.5) + 0.5;
