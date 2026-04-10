@@ -67,3 +67,7 @@ k6 run tests/load-test.js
 ```
 
 - Résultats détaillés affichés dans la console (y compris les trends par étape)
+
+
+## 🔹 Local
+- Ces test utilisent une image docker de taiga. Sur votre machine, l'url ne sera surement pas le meme. Vous pouvez la changer dans config.json
