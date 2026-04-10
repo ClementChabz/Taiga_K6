@@ -66,5 +66,4 @@ Le système supporte les VUs testés, mais certaines opérations dépassent le s
 k6 run tests/load-test.js
 ```
 
-- **Dashboard web** : http://127.0.0.1:5665
 - Résultats détaillés affichés dans la console (y compris les trends par étape)
