@@ -3,3 +3,4 @@ node_modules/
 .env
 .claude
 *.Identifier
+*:Zone.Identifier
